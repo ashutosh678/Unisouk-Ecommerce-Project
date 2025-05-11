@@ -16,12 +16,13 @@ export const AppDataSource = new DataSource({
 	username: process.env.DATABASE_USERNAME || "postgres",
 	password: process.env.DATABASE_PASSWORD || "postgres",
 	database: process.env.DATABASE_NAME || "ecommerce",
-	synchronize: true,
+	synchronize: false,
 	dropSchema: process.env.NODE_ENV === "development",
 	logging: false,
 	entities: [User, Product, Category, Order, OrderItem],
-	// migrations: [process.env.NODE_ENV === "production" ? "dist/migrations/*.js" : "src/migrations/*.ts"],
+	migrations: ["dist/migrations/*.js"],
 	subscribers: ["src/subscribers/*.ts"],
+	schema: "public",
 });
 
 // Initialize database connection
@@ -31,10 +32,10 @@ export const initializeDatabase = async () => {
 			await AppDataSource.initialize();
 			logger.info("Database connection initialized");
 			// No migrations, just synchronize
-			await AppDataSource.synchronize();
-			logger.info(
-				"Database schema synchronized (missing tables created if needed)"
-			);
+			// await AppDataSource.synchronize();
+			// logger.info(
+			// 	"Database schema synchronized (missing tables created if needed)"
+			// );
 		}
 	} catch (error) {
 		logger.error("Error during database initialization:", error);
