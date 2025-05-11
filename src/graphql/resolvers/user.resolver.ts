@@ -1,12 +1,4 @@
-import {
-	Resolver,
-	Query,
-	Mutation,
-	Arg,
-	ID,
-	Ctx,
-	Authorized,
-} from "type-graphql";
+import { Resolver, Query, Mutation, Arg, Ctx, Authorized } from "type-graphql";
 import { User, UserRole } from "../../models/user.model";
 import { AppDataSource } from "../../config/database";
 import { Context } from "../../types/context";
@@ -19,12 +11,11 @@ import {
 	ValidationError,
 	AuthenticationError,
 	NotFoundError,
-	handleError,
 } from "../../utils/errorHandler";
-import { validateOrReject, IsEmail, MinLength, Length } from "class-validator";
-import { InputType, Field } from "type-graphql";
+import { validateOrReject } from "class-validator";
 import { RegisterUserInput } from "../../validators/register-user.input";
 import { UpdateUserRoleInput } from "../../validators/update-user-role.input";
+import { UpdateProfileInput } from "../../validators/update-profile.input";
 
 @Resolver(User)
 export class UserResolver {
@@ -162,5 +153,23 @@ export class UserResolver {
 				? error
 				: new DatabaseError("Failed to update user role");
 		}
+	}
+
+	@Mutation(() => User)
+	@Authorized()
+	async updateProfile(
+		@Arg("data") data: UpdateProfileInput,
+		@Ctx() { user }: Context
+	): Promise<User> {
+		await validateOrReject(data);
+		const existingUser = await this.userRepository.findOne({
+			where: { id: user.id },
+		});
+		if (!existingUser) throw new NotFoundError("User not found");
+		if (data.firstName !== undefined) existingUser.firstName = data.firstName;
+		if (data.lastName !== undefined) existingUser.lastName = data.lastName;
+		if (data.password !== undefined)
+			existingUser.password = await hash(data.password, 10);
+		return this.userRepository.save(existingUser);
 	}
 }

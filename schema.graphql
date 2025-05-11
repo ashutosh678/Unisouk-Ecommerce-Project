@@ -33,6 +33,7 @@ type Mutation {
   updateCategory(data: CategoryInput!, id: ID!): Category!
   updateOrderStatus(data: UpdateOrderStatusInput!): Order!
   updateProduct(data: ProductInput!, id: ID!): Product!
+  updateProfile(data: UpdateProfileInput!): User!
   updateUserRole(data: UpdateUserRoleInput!): User!
 }
 
@@ -88,7 +89,7 @@ type Query {
   order(id: ID!): Order!
   orders: [Order!]!
   product(id: ID!): Product!
-  products: [Product!]!
+  products(categoryId: ID, maxPrice: Float, minPrice: Float): [Product!]!
   users: [User!]!
 }
 
@@ -102,6 +103,12 @@ input RegisterUserInput {
 input UpdateOrderStatusInput {
   id: ID!
   status: String!
+}
+
+input UpdateProfileInput {
+  firstName: String
+  lastName: String
+  password: String
 }
 
 input UpdateUserRoleInput {

@@ -10,8 +10,20 @@ export class ProductResolver {
 	private productRepository = AppDataSource.getRepository(Product);
 
 	@Query(() => [Product])
-	async products(): Promise<Product[]> {
+	async products(
+		@Arg("categoryId", () => ID, { nullable: true }) categoryId?: string,
+		@Arg("minPrice", () => Number, { nullable: true }) minPrice?: number,
+		@Arg("maxPrice", () => Number, { nullable: true }) maxPrice?: number
+	): Promise<Product[]> {
+		const where: any = {};
+		if (categoryId) where.category = { id: categoryId };
+		if (minPrice !== undefined || maxPrice !== undefined) {
+			where.price = {};
+			if (minPrice !== undefined) where.price[">="] = minPrice;
+			if (maxPrice !== undefined) where.price["<="] = maxPrice;
+		}
 		return this.productRepository.find({
+			where,
 			relations: ["category"],
 		});
 	}
