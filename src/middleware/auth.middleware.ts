@@ -1,9 +1,14 @@
-import { Request } from "express";
+import { Request as ExpressRequest } from "express";
 import { verify } from "jsonwebtoken";
 import { AppDataSource } from "../config/database";
 import { User, UserRole } from "../models/user.model";
 import logger from "../utils/logger";
 import { AuthenticationError } from "../utils/errorHandler";
+
+// Extend the Express Request type to include the user property
+interface Request extends ExpressRequest {
+	user?: User;
+}
 
 // Auth checker for type-graphql
 export const authChecker = (
@@ -57,6 +62,8 @@ export const authMiddleware = async (req: Request) => {
 			}
 
 			logger.debug(`Authenticated user: ${user.id} with role: ${user.role}`);
+			// Attach the authenticated user to the request object
+			req.user = user;
 			return user;
 		} catch (error) {
 			logger.warn("Invalid token:", error);

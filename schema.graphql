@@ -41,10 +41,12 @@ type Order {
   createdAt: DateTimeISO!
   id: ID!
   items: [OrderItem!]!
+  product: Product!
   status: String!
   totalAmount: Float!
   updatedAt: DateTimeISO!
   user: User!
+  userId: ID!
 }
 
 type OrderItem {

@@ -1,9 +1,20 @@
-import { Resolver, Query, Mutation, Arg, ID, Authorized } from "type-graphql";
+import {
+	Resolver,
+	Query,
+	Mutation,
+	Arg,
+	ID,
+	Authorized,
+	FieldResolver,
+	Root,
+} from "type-graphql";
 import { Product } from "../../models/product.model";
 import { AppDataSource } from "../../config/database";
 import { UserRole } from "../../models/user.model";
 import { ProductInput } from "../../validators/product.input";
 import { validateOrReject } from "class-validator";
+import { Category } from "../../models/category.model";
+import { Between, MoreThanOrEqual, LessThanOrEqual } from "typeorm";
 
 @Resolver(Product)
 export class ProductResolver {
@@ -17,10 +28,12 @@ export class ProductResolver {
 	): Promise<Product[]> {
 		const where: any = {};
 		if (categoryId) where.category = { id: categoryId };
-		if (minPrice !== undefined || maxPrice !== undefined) {
-			where.price = {};
-			if (minPrice !== undefined) where.price[">="] = minPrice;
-			if (maxPrice !== undefined) where.price["<="] = maxPrice;
+		if (minPrice !== undefined && maxPrice !== undefined) {
+			where.price = Between(minPrice, maxPrice);
+		} else if (minPrice !== undefined) {
+			where.price = MoreThanOrEqual(minPrice);
+		} else if (maxPrice !== undefined) {
+			where.price = LessThanOrEqual(maxPrice);
 		}
 		return this.productRepository.find({
 			where,
@@ -42,12 +55,20 @@ export class ProductResolver {
 	@Authorized([UserRole.ADMIN])
 	async createProduct(@Arg("data") data: ProductInput): Promise<Product> {
 		await validateOrReject(data);
+
+		// Load the category to ensure it exists
+		const category = await this.productRepository.manager.findOne(Category, {
+			where: { id: data.categoryId },
+		});
+		if (!category) throw new Error("Category not found");
+
+		// Create the product with the loaded category
 		const product = this.productRepository.create({
 			name: data.name,
 			description: data.description,
 			price: data.price,
 			inventory: data.inventory,
-			category: { id: data.categoryId },
+			category: category,
 		});
 		return this.productRepository.save(product);
 	}
@@ -81,5 +102,14 @@ export class ProductResolver {
 
 		await this.productRepository.remove(product);
 		return true;
+	}
+
+	@FieldResolver(() => Category)
+	async category(@Root() product: Product): Promise<Category> {
+		const category = await this.productRepository.manager.findOne(Category, {
+			where: { id: product.category.id },
+		});
+		if (!category) throw new Error("Category not found");
+		return category;
 	}
 }

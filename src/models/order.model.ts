@@ -5,6 +5,7 @@ import {
 	UpdateDateColumn,
 	ManyToOne,
 	OneToMany,
+	JoinColumn,
 } from "typeorm";
 import { User } from "./user.model";
 import { OrderItem } from "./order-item.model";
@@ -26,8 +27,13 @@ export class Order {
 	@Column({ type: "uuid", primary: true, default: () => "gen_random_uuid()" })
 	id: string;
 
+	@Field(() => ID)
+	@Column({ type: "uuid" })
+	userId: string;
+
 	@Field(() => User)
 	@ManyToOne(() => User, (user) => user.orders)
+	@JoinColumn({ name: "userId" })
 	user: User;
 
 	@Field(() => String)
