@@ -8,6 +8,7 @@ import {
 import { Order } from "./order.model";
 import { Product } from "./product.model";
 import { Field, ObjectType, ID, Float } from "type-graphql";
+import { Min, IsInt } from "class-validator";
 
 @ObjectType()
 @Entity("order_items")
@@ -26,6 +27,8 @@ export class OrderItem {
 
 	@Field()
 	@Column()
+	@IsInt()
+	@Min(1)
 	quantity: number;
 
 	@Field(() => Float)

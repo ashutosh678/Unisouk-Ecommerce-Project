@@ -14,6 +14,10 @@ import { AppDataSource } from "../../config/database";
 import { Context } from "../../types/context";
 import { UserRole } from "../../models/user.model";
 import { InputType, Field } from "type-graphql";
+import { IsUUID, IsInt, Min } from "class-validator";
+import { OrderItemInput } from "../../validators/order-item.input";
+import { UpdateOrderStatusInput } from "../../validators/update-order-status.input";
+import { validateOrReject } from "class-validator";
 
 @Resolver(Order)
 export class OrderResolver {
@@ -97,24 +101,14 @@ export class OrderResolver {
 	@Mutation(() => Order)
 	@Authorized([UserRole.ADMIN])
 	async updateOrderStatus(
-		@Arg("id", () => ID) id: string,
-		@Arg("status", () => String) status: OrderStatus
+		@Arg("data") data: UpdateOrderStatusInput
 	): Promise<Order> {
+		await validateOrReject(data);
 		const order = await this.orderRepository.findOne({
-			where: { id },
+			where: { id: data.id },
 		});
 		if (!order) throw new Error("Order not found");
-
-		order.status = status;
+		order.status = data.status;
 		return this.orderRepository.save(order);
 	}
-}
-
-@InputType()
-class OrderItemInput {
-	@Field()
-	productId: string;
-
-	@Field()
-	quantity: number;
 }

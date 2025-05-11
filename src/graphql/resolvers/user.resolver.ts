@@ -21,6 +21,10 @@ import {
 	NotFoundError,
 	handleError,
 } from "../../utils/errorHandler";
+import { validateOrReject, IsEmail, MinLength, Length } from "class-validator";
+import { InputType, Field } from "type-graphql";
+import { RegisterUserInput } from "../../validators/register-user.input";
+import { UpdateUserRoleInput } from "../../validators/update-user-role.input";
 
 @Resolver(User)
 export class UserResolver {
@@ -52,48 +56,30 @@ export class UserResolver {
 	}
 
 	@Mutation(() => User)
-	async register(
-		@Arg("email") email: string,
-		@Arg("password") password: string,
-		@Arg("firstName") firstName: string,
-		@Arg("lastName") lastName: string
-	): Promise<User> {
+	async register(@Arg("data") data: RegisterUserInput): Promise<User> {
 		try {
-			logger.info(`Attempting to register new user with email: ${email}`);
+			logger.info(`Attempting to register new user with email: ${data.email}`);
 
-			// Validate email format
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			if (!emailRegex.test(email)) {
-				logger.warn(`Invalid email format: ${email}`);
-				throw new ValidationError("Invalid email format");
-			}
-
-			// Validate password strength
-			if (password.length < 6) {
-				logger.warn("Password too short");
-				throw new ValidationError(
-					"Password must be at least 6 characters long"
-				);
-			}
+			await validateOrReject(data);
 
 			// Check if user already exists
 			const existingUser = await this.userRepository.findOne({
-				where: { email },
+				where: { email: data.email },
 			});
 			if (existingUser) {
-				logger.warn(`Email already registered: ${email}`);
+				logger.warn(`Email already registered: ${data.email}`);
 				throw new ValidationError("Email already registered");
 			}
 
 			// Hash password
-			const hashedPassword = await hash(password, 10);
+			const hashedPassword = await hash(data.password, 10);
 
 			// Create new user
 			const user = this.userRepository.create({
-				email,
+				email: data.email,
 				password: hashedPassword,
-				firstName,
-				lastName,
+				firstName: data.firstName,
+				lastName: data.lastName,
 			});
 
 			// Save user
@@ -151,32 +137,24 @@ export class UserResolver {
 
 	@Mutation(() => User)
 	@Authorized([UserRole.ADMIN])
-	async updateUserRole(
-		@Arg("id", () => ID) id: string,
-		@Arg("role", () => String) role: UserRole
-	): Promise<User> {
+	async updateUserRole(@Arg("data") data: UpdateUserRoleInput): Promise<User> {
 		try {
-			logger.info(`Attempting to update role for user ID: ${id} to ${role}`);
-
+			logger.info(
+				`Attempting to update role for user ID: ${data.id} to ${data.role}`
+			);
+			await validateOrReject(data);
 			// Find user
 			const user = await this.userRepository.findOne({
-				where: { id },
+				where: { id: data.id },
 			});
 			if (!user) {
-				logger.warn(`User not found with ID: ${id}`);
+				logger.warn(`User not found with ID: ${data.id}`);
 				throw new NotFoundError("User not found");
 			}
-
-			// Validate role
-			if (!Object.values(UserRole).includes(role)) {
-				logger.warn(`Invalid role provided: ${role}`);
-				throw new ValidationError("Invalid role");
-			}
-
 			// Update role
-			user.role = role;
+			user.role = data.role;
 			const updatedUser = await this.userRepository.save(user);
-			logger.info(`Successfully updated role for user ID: ${id}`);
+			logger.info(`Successfully updated role for user ID: ${data.id}`);
 			return updatedUser;
 		} catch (error) {
 			logger.error("Error updating user role:", error);

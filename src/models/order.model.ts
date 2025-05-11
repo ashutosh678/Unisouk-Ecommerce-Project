@@ -9,6 +9,7 @@ import {
 import { User } from "./user.model";
 import { OrderItem } from "./order-item.model";
 import { Field, ObjectType, ID, Float } from "type-graphql";
+import { Min } from "class-validator";
 
 export enum OrderStatus {
 	PENDING = "PENDING",
@@ -39,6 +40,7 @@ export class Order {
 
 	@Field(() => Float)
 	@Column("decimal", { precision: 10, scale: 2 })
+	@Min(0)
 	totalAmount: number;
 
 	@Field(() => [OrderItem])

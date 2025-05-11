@@ -2,6 +2,8 @@ import { Resolver, Query, Mutation, Arg, ID, Authorized } from "type-graphql";
 import { Product } from "../../models/product.model";
 import { AppDataSource } from "../../config/database";
 import { UserRole } from "../../models/user.model";
+import { ProductInput } from "../../validators/product.input";
+import { validateOrReject } from "class-validator";
 
 @Resolver(Product)
 export class ProductResolver {
@@ -26,21 +28,15 @@ export class ProductResolver {
 
 	@Mutation(() => Product)
 	@Authorized([UserRole.ADMIN])
-	async createProduct(
-		@Arg("name") name: string,
-		@Arg("description") description: string,
-		@Arg("price") price: number,
-		@Arg("inventory") inventory: number,
-		@Arg("categoryId", () => ID) categoryId: string
-	): Promise<Product> {
+	async createProduct(@Arg("data") data: ProductInput): Promise<Product> {
+		await validateOrReject(data);
 		const product = this.productRepository.create({
-			name,
-			description,
-			price,
-			inventory,
-			category: { id: categoryId },
+			name: data.name,
+			description: data.description,
+			price: data.price,
+			inventory: data.inventory,
+			category: { id: data.categoryId },
 		});
-
 		return this.productRepository.save(product);
 	}
 
@@ -48,23 +44,18 @@ export class ProductResolver {
 	@Authorized([UserRole.ADMIN])
 	async updateProduct(
 		@Arg("id", () => ID) id: string,
-		@Arg("name", { nullable: true }) name?: string,
-		@Arg("description", { nullable: true }) description?: string,
-		@Arg("price", { nullable: true }) price?: number,
-		@Arg("inventory", { nullable: true }) inventory?: number,
-		@Arg("categoryId", () => ID, { nullable: true }) categoryId?: string
+		@Arg("data") data: ProductInput
 	): Promise<Product> {
+		await validateOrReject(data);
 		const product = await this.productRepository.findOne({
 			where: { id },
 		});
 		if (!product) throw new Error("Product not found");
-
-		if (name) product.name = name;
-		if (description) product.description = description;
-		if (price) product.price = price;
-		if (inventory) product.inventory = inventory;
-		if (categoryId) product.category = { id: categoryId } as any;
-
+		product.name = data.name;
+		product.description = data.description;
+		product.price = data.price;
+		product.inventory = data.inventory;
+		product.category = { id: data.categoryId } as any;
 		return this.productRepository.save(product);
 	}
 

@@ -2,6 +2,8 @@ import { Resolver, Query, Mutation, Arg, ID, Authorized } from "type-graphql";
 import { Category } from "../../models/category.model";
 import { AppDataSource } from "../../config/database";
 import { UserRole } from "../../models/user.model";
+import { CategoryInput } from "../../validators/category.input";
+import { validateOrReject } from "class-validator";
 
 @Resolver(Category)
 export class CategoryResolver {
@@ -26,15 +28,12 @@ export class CategoryResolver {
 
 	@Mutation(() => Category)
 	@Authorized([UserRole.ADMIN])
-	async createCategory(
-		@Arg("name") name: string,
-		@Arg("description") description: string
-	): Promise<Category> {
+	async createCategory(@Arg("data") data: CategoryInput): Promise<Category> {
+		await validateOrReject(data);
 		const category = this.categoryRepository.create({
-			name,
-			description,
+			name: data.name,
+			description: data.description,
 		});
-
 		return this.categoryRepository.save(category);
 	}
 
@@ -42,17 +41,15 @@ export class CategoryResolver {
 	@Authorized([UserRole.ADMIN])
 	async updateCategory(
 		@Arg("id", () => ID) id: string,
-		@Arg("name", { nullable: true }) name?: string,
-		@Arg("description", { nullable: true }) description?: string
+		@Arg("data") data: CategoryInput
 	): Promise<Category> {
+		await validateOrReject(data);
 		const category = await this.categoryRepository.findOne({
 			where: { id },
 		});
 		if (!category) throw new Error("Category not found");
-
-		if (name) category.name = name;
-		if (description) category.description = description;
-
+		category.name = data.name;
+		category.description = data.description;
 		return this.categoryRepository.save(category);
 	}
 

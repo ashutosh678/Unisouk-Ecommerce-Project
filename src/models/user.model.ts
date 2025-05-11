@@ -4,6 +4,7 @@ import {
 	CreateDateColumn,
 	UpdateDateColumn,
 	OneToMany,
+	Index,
 } from "typeorm";
 import { Order } from "./order.model";
 import { Field, ObjectType, ID } from "type-graphql";
@@ -15,24 +16,26 @@ export enum UserRole {
 
 @ObjectType()
 @Entity("users")
+@Index(["email"])
 export class User {
 	@Field(() => ID)
 	@Column({ type: "uuid", primary: true, default: () => "gen_random_uuid()" })
 	id: string;
 
 	@Field()
-	@Column({ unique: true })
+	@Index({ unique: true })
+	@Column({ unique: true, length: 100 })
 	email: string;
 
-	@Column()
+	@Column({ length: 100 })
 	password: string;
 
 	@Field()
-	@Column()
+	@Column({ length: 50 })
 	firstName: string;
 
 	@Field()
-	@Column()
+	@Column({ length: 50 })
 	lastName: string;
 
 	@Field(() => String)

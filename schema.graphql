@@ -12,23 +12,28 @@ type Category {
   updatedAt: DateTimeISO!
 }
 
+input CategoryInput {
+  description: String!
+  name: String!
+}
+
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format.
 """
 scalar DateTimeISO
 
 type Mutation {
-  createCategory(description: String!, name: String!): Category!
+  createCategory(data: CategoryInput!): Category!
   createOrder(items: [OrderItemInput!]!): Order!
-  createProduct(categoryId: ID!, description: String!, inventory: Float!, name: String!, price: Float!): Product!
+  createProduct(data: ProductInput!): Product!
   deleteCategory(id: ID!): Boolean!
   deleteProduct(id: ID!): Boolean!
   login(email: String!, password: String!): String!
-  register(email: String!, firstName: String!, lastName: String!, password: String!): User!
-  updateCategory(description: String, id: ID!, name: String): Category!
-  updateOrderStatus(id: ID!, status: String!): Order!
-  updateProduct(categoryId: ID, description: String, id: ID!, inventory: Float, name: String, price: Float): Product!
-  updateUserRole(id: ID!, role: String!): User!
+  register(data: RegisterUserInput!): User!
+  updateCategory(data: CategoryInput!, id: ID!): Category!
+  updateOrderStatus(data: UpdateOrderStatusInput!): Order!
+  updateProduct(data: ProductInput!, id: ID!): Product!
+  updateUserRole(data: UpdateUserRoleInput!): User!
 }
 
 type Order {
@@ -68,6 +73,14 @@ type Product {
   updatedAt: DateTimeISO!
 }
 
+input ProductInput {
+  categoryId: ID!
+  description: String!
+  inventory: Float!
+  name: String!
+  price: Float!
+}
+
 type Query {
   categories: [Category!]!
   category(id: ID!): Category!
@@ -77,6 +90,23 @@ type Query {
   product(id: ID!): Product!
   products: [Product!]!
   users: [User!]!
+}
+
+input RegisterUserInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  password: String!
+}
+
+input UpdateOrderStatusInput {
+  id: ID!
+  status: String!
+}
+
+input UpdateUserRoleInput {
+  id: ID!
+  role: String!
 }
 
 type User {

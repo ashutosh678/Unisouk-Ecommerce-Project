@@ -5,6 +5,7 @@ import {
 	UpdateDateColumn,
 	ManyToOne,
 	OneToMany,
+	Index,
 } from "typeorm";
 import { Category } from "./category.model";
 import { OrderItem } from "./order-item.model";
@@ -18,7 +19,8 @@ export class Product {
 	id: string;
 
 	@Field()
-	@Column()
+	@Index()
+	@Column({ length: 100 })
 	name: string;
 
 	@Field()

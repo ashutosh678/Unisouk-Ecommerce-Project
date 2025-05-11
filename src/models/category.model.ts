@@ -5,6 +5,7 @@ import {
 	CreateDateColumn,
 	UpdateDateColumn,
 	OneToMany,
+	Index,
 } from "typeorm";
 import { Product } from "./product.model";
 import { Field, ObjectType, ID } from "type-graphql";
@@ -17,7 +18,8 @@ export class Category {
 	id: string;
 
 	@Field()
-	@Column()
+	@Index()
+	@Column({ length: 100 })
 	name: string;
 
 	@Field()
