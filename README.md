@@ -23,7 +23,7 @@ A GraphQL API for an e-commerce platform built with Node.js, TypeORM, Apollo Ser
 
 - Node.js (v16+)
 - PostgreSQL 13+
-- npm or yarn
+- npm
 
 ---
 
@@ -40,8 +40,6 @@ A GraphQL API for an e-commerce platform built with Node.js, TypeORM, Apollo Ser
 
    ```bash
    npm install
-   # or
-   yarn install
    ```
 
 3. **Create a PostgreSQL database:**
@@ -68,9 +66,7 @@ A GraphQL API for an e-commerce platform built with Node.js, TypeORM, Apollo Ser
    DB_PASSWORD=your_password
    DB_DATABASE=ecommerce_db
    JWT_SECRET=your_jwt_secret_key
-   JWT_EXPIRATION=24h
    PORT=3000
-   NODE_ENV=development
    ```
 
 5. **Run database migrations:**
