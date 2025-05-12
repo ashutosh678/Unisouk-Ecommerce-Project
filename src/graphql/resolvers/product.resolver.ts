@@ -84,11 +84,19 @@ export class ProductResolver {
 			where: { id },
 		});
 		if (!product) throw new Error("Product not found");
+
+		// Fetch the category entity
+		const category = await this.productRepository.manager.findOne(Category, {
+			where: { id: data.categoryId },
+		});
+		if (!category) throw new Error("Category not found");
+
 		product.name = data.name;
 		product.description = data.description;
 		product.price = data.price;
 		product.inventory = data.inventory;
-		product.category = { id: data.categoryId } as any;
+		product.category = category;
+
 		return this.productRepository.save(product);
 	}
 
