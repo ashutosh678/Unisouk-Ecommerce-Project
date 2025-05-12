@@ -434,9 +434,3 @@ mutation {
 ## Environment Variables
 
 See `env.template` for all required environment variables.
-
----
-
-## License
-
-MIT
