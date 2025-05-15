@@ -91,7 +91,7 @@ type Query {
   order(id: ID!): Order!
   orders: [Order!]!
   product(id: ID!): Product!
-  products(categoryId: ID, maxPrice: Float, minPrice: Float): [Product!]!
+  products(categoryId: ID, limit: Float, maxPrice: Float, minPrice: Float, offset: Float, search: String): [Product!]!
   users: [User!]!
 }
 

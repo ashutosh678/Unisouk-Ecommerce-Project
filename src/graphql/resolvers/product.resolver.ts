@@ -14,7 +14,8 @@ import { UserRole } from "../../models/user.model";
 import { ProductInput } from "../../validators/product.input";
 import { validateOrReject } from "class-validator";
 import { Category } from "../../models/category.model";
-import { Between, MoreThanOrEqual, LessThanOrEqual } from "typeorm";
+import { Between, MoreThanOrEqual, LessThanOrEqual, ILike } from "typeorm";
+import logger from "../../utils/logger";
 
 @Resolver(Product)
 export class ProductResolver {
@@ -24,7 +25,10 @@ export class ProductResolver {
 	async products(
 		@Arg("categoryId", () => ID, { nullable: true }) categoryId?: string,
 		@Arg("minPrice", () => Number, { nullable: true }) minPrice?: number,
-		@Arg("maxPrice", () => Number, { nullable: true }) maxPrice?: number
+		@Arg("maxPrice", () => Number, { nullable: true }) maxPrice?: number,
+		@Arg("search", () => String, { nullable: true }) search?: string,
+		@Arg("limit", () => Number, { nullable: true }) limit?: number,
+		@Arg("offset", () => Number, { nullable: true }) offset?: number
 	): Promise<Product[]> {
 		const where: any = {};
 		if (categoryId) where.category = { id: categoryId };
@@ -35,9 +39,15 @@ export class ProductResolver {
 		} else if (maxPrice !== undefined) {
 			where.price = LessThanOrEqual(maxPrice);
 		}
+		logger.info(`Searching for products with: ${JSON.stringify(where)}`);
 		return this.productRepository.find({
-			where,
+			where: [
+				{ name: ILike(`%${search}%`) },
+				{ description: ILike(`%${search}%`) },
+			],
 			relations: ["category"],
+			take: limit,
+			skip: offset,
 		});
 	}
 
